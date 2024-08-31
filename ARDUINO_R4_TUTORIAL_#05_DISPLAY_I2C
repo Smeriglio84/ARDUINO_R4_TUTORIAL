@@ -1,0 +1,36 @@
+// Sketch created by VULTRUM DYNAMICS LAB
+
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd1(0x23,16,2);  
+LiquidCrystal_I2C lcd2(0x27,20,4);  
+
+void setup()
+{
+
+ lcd1.init();                      // initialize the lcd 
+  // Print a message to the LCD.
+  lcd1.backlight();
+  lcd1.setCursor(1,0);
+  lcd1.print("Hello, world!");
+  lcd1.setCursor(2,1);
+  lcd1.print("Vultrum LAB");
+  
+
+  lcd2.init();                      // initialize the lcd 
+  // Print a message to the LCD.
+  lcd2.backlight();
+  lcd2.setCursor(3,0);
+  lcd2.print("Hello, world!");
+  lcd2.setCursor(4,1);
+  lcd2.print("Vultrum LAB");
+   lcd2.setCursor(0,2);
+  lcd2.print("Arduino UNO R4 WiFi");
+   lcd2.setCursor(2,3);
+  lcd2.print("Power By Vultrum");
+}
+
+
+void loop()
+{
+}
