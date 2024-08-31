@@ -1,0 +1,67 @@
+
+#include <Wire.h>
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+
+
+
+hd44780_I2Cexp lcd(0x27);
+
+// LCD geometry
+const int LCD_COLS = 20;
+const int LCD_ROWS = 4;
+const int backlight_control = 10;
+int pushUP = 0;
+int pushDOWN = 0;
+int brightStep = 5;
+
+int brightness = 0;  // how bright the LED is
+
+void setup() {
+
+  Serial.begin(9600);
+
+pinMode (backlight_control, OUTPUT); 
+pinMode (4, INPUT); 
+pinMode (5, INPUT); 
+
+
+
+int status;
+
+	status = lcd.begin(LCD_COLS, LCD_ROWS);
+	if(status) // non zero status means it was unsuccesful
+	{
+		// hd44780 has a fatalError() routine that blinks an led if possible
+		// begin() failed so blink error code using the onboard LED if possible
+		hd44780::fatalError(status); // does not return
+	}
+
+	
+  lcd.clear();
+  delay(1000);
+	lcd.print("HELLO !!!");
+  
+}
+
+void loop() {
+
+pushUP = digitalRead (4);
+pushDOWN = digitalRead (5);
+
+if (pushUP == HIGH) {
+brightness = brightness + brightStep;
+
+}else if (pushDOWN == HIGH) {
+brightness = brightness - brightStep;
+
+}
+
+  brightness = constrain (brightness, 0, 254);
+  analogWrite(backlight_control, brightness);
+Serial.println(brightness);
+
+delay(50);
+
+
+}
