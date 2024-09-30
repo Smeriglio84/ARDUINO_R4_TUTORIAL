@@ -1,0 +1,142 @@
+#include <EEPROM.h>
+#include <Wire.h>
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+
+
+
+hd44780_I2Cexp lcd(0x27);
+
+// LCD geometry
+const int LCD_COLS = 20;
+const int LCD_ROWS = 4;
+const int backlight_control = 10;
+
+int pushUP = 0;
+int pushDOWN = 0;
+int brightStep = 5;
+int brightness = 0;  // how bright the LED is
+int stato = 0;
+int LED = LOW;
+int blink = 0;
+
+
+unsigned long t1, dt;
+
+void setup() {
+
+  Serial.begin(9600);
+
+pinMode (backlight_control, OUTPUT); 
+pinMode (4, INPUT); 
+pinMode (5, INPUT); 
+
+int status;
+
+	status = lcd.begin(LCD_COLS, LCD_ROWS);
+	if(status) // non zero status means it was unsuccesful
+	{
+		// hd44780 has a fatalError() routine that blinks an led if possible
+		// begin() failed so blink error code using the onboard LED if possible
+		hd44780::fatalError(status); // does not return
+	}
+
+  lcd.clear();
+
+  t1 = millis();
+
+
+brightness = EEPROM.read(0);
+
+}
+
+void loop() {
+  
+  lcd.setCursor(2, 0);
+	lcd.print("VULTRUM DYNAMICS");
+  lcd.setCursor(8, 1);
+	lcd.print("by");
+  lcd.setCursor(2, 2);
+	lcd.print("Cesare Zuanazzi");
+
+
+pushUP = digitalRead (4);
+pushDOWN = digitalRead (5);
+
+if (pushDOWN == LOW && pushUP == LOW) {
+  stato = 0;
+}else if (brightness == 255 && pushUP == HIGH) {
+  stato = 1;
+}else if ( brightness < 255 && pushUP == HIGH){
+  stato = 2;
+}else if ( brightness > 0 && pushDOWN == HIGH) {
+  stato = 3;
+}else if (brightness == 0 && pushDOWN == HIGH) {
+  stato = 4;
+}
+
+
+switch (stato){
+
+  case 0:
+  analogWrite(backlight_control, brightness);
+  break;
+    
+  case 1:
+  dt = millis() - t1;
+  if (dt >= 200){
+     t1 = millis();
+     LED = !LED;
+     if (LED == LOW){
+      blink = 0;
+     } else {
+      blink = 255;
+     }
+   analogWrite(backlight_control, blink);
+  }
+  
+  break;
+
+  case 2:
+    brightness = brightness + brightStep;
+     brightness = constrain (brightness, 0, 255);
+  analogWrite(backlight_control, brightness);
+
+  break;
+
+  case 3:
+  brightness = brightness - brightStep;
+   brightness = constrain (brightness, 0, 255);
+  analogWrite(backlight_control, brightness);
+  break;
+
+  case 4:
+   dt = millis() - t1;
+  if (dt >= 200){
+     t1 = millis();
+     LED = !LED;
+     if (LED == LOW){
+      blink = 0;
+     } else {
+      blink = 255;
+     }
+   analogWrite(backlight_control, blink);
+  }
+  break;
+
+}
+
+Serial.println(brightness);
+Serial.print ("Stato: ");
+Serial.println(stato);
+Serial.println(LED);
+
+
+EEPROM.update(0, brightness);
+
+
+
+delay(50);
+
+
+}
